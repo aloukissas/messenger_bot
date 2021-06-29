@@ -29,7 +29,8 @@ config :phoenix, :json_library, Jason
 config :messenger_bot, :facebook_api,
   version: "v11.0",
   base_url: "https://graph.facebook.com",
-  access_token: "foobar"
+  access_token: "foobar",
+  verify_token: "foobar"
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

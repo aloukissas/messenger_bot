@@ -13,16 +13,12 @@ defmodule MessengerBotWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", MessengerBotWeb do
-    pipe_through :browser
+  scope "/webhook", MessengerBotWeb do
+    pipe_through :api
 
-    get "/", PageController, :index
+    get "/", WebhookController, :get
+    post "/", WebhookController, :post
   end
-
-  # Other scopes may use custom stacks.
-  # scope "/api", MessengerBotWeb do
-  #   pipe_through :api
-  # end
 
   # Enables LiveDashboard only for development
   #
