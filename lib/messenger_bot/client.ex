@@ -1,6 +1,7 @@
 defmodule MessengerBot.Client do
   use Tesla, only: [:get, :post]
 
+  plug Tesla.Middleware.JSON
   plug Tesla.Middleware.BaseUrl, Application.fetch_env!(:messenger_bot, :facebook_api)[:base_url]
 
   plug Tesla.Middleware.Query,
@@ -10,7 +11,7 @@ defmodule MessengerBot.Client do
 
   def do_post(body) do
     full_path()
-    |> post(Jason.encode!(body))
+    |> post(body)
     |> process_result()
   end
 
