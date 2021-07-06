@@ -20,7 +20,8 @@ defmodule MessengerBot.Models.Product do
     %__MODULE__{}
     |> cast(params, [:title, :description, :sku])
     |> validate_required([:title, :sku])
-    |> unique_constraint(:sku, name: :products_sku_index, message: "Products must have unique SKU")
+    |> validate_length(:sku, max: 80)
+    |> unique_constraint(:sku, name: :products_sku_index, message: "Products must have unique sku")
     |> Repo.insert()
     |> case do
       {:ok, product} ->
