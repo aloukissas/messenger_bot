@@ -28,9 +28,9 @@ defmodule MessengerBot.ClientTest do
     }
   }
 
-  defp expect_response(bypass, response) do
+  defp expect_response(bypass, response, status \\ 200) do
     Bypass.expect_once(bypass, "POST", "/#{@api_version}/me/messages", fn conn ->
-      Plug.Conn.resp(conn, 200, Jason.encode!(response))
+      Plug.Conn.resp(conn, status, Jason.encode!(response))
     end)
   end
 
@@ -54,13 +54,13 @@ defmodule MessengerBot.ClientTest do
   end
 
   test "rate limiting returns error", %{bypass: bypass} do
-    expect_response(bypass, @rate_limit_response)
+    expect_response(bypass, @rate_limit_response, 429)
 
     assert {:error, :rate_limited} = Client.do_post(@test_message)
   end
 
   test "generic error returns message", %{bypass: bypass} do
-    expect_response(bypass, @no_matching_user_response)
+    expect_response(bypass, @no_matching_user_response, 400)
 
     assert {:error, error} = Client.do_post(@test_message)
     assert error == @no_matching_user_response["error"]["message"]
