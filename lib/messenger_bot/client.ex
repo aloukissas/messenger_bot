@@ -1,5 +1,5 @@
 defmodule MessengerBot.Client do
-  use Tesla, only: [:get, :post]
+  use Tesla, only: [:post]
 
   plug Tesla.Middleware.JSON
   plug Tesla.Middleware.BaseUrl, Application.fetch_env!(:messenger_bot, :facebook_api)[:base_url]
