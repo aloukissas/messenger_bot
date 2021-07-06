@@ -3,45 +3,49 @@ defmodule MessengerBot.Review do
   alias MessengerBot.Models.{User, Review, Product, Order}
   require Logger
 
-  def request(%Order{status: "COMPLETED"} = order) do
+  @title_max_len 65
+  @subtitle_max_len 80
+  @button_title_max_len 20
+  @placeholder_max_len 65
+  @question_id_max_len 80
+
+  def request_for_recent_order(%Order{status: "COMPLETED"} = order) do
     %Order{user: %User{psid: psid}, product: %Product{sku: sku, title: product_title}} =
       Repo.preload(order, [:user, :product])
 
     %{
-      "recipient" => %{"id" => psid},
-      "message" => %{
-        "attachment" => %{
-          "type" => "template",
-          "payload" => %{
-            "template_type" => "customer_feedback",
-            "title" => "How would you rate #{product_title}?",
-            "subtitle" =>
-              "Let us know how you like #{product_title} by answering a couple questions.",
-            "button_title" => "Rate this product",
-            "feedback_screens" => [
-              %{
-                "questions" => [
-                  %{
-                    "id" => sku,
-                    "type" => "csat",
-                    "score_label" => "none",
-                    "score_option" => "five_stars",
-                    "follow_up" => %{
-                      "type" => "free_form",
-                      "placeholder" => "Write your review"
-                    }
-                  }
-                ]
-              }
-            ],
-            "business_privacy" => %{
-              "url" => "https://www.example.com"
-            },
-            "expires_in_days" => 3
-          }
-        }
-      }
+      psid: psid,
+      title: "How would you rate #{product_title}?",
+      subtitle: "Let us know how you like #{product_title}.",
+      button_title: "Rate this product",
+      question_id: sku,
+      placeholder: "Write your review"
     }
+    |> mk_request_payload()
+    |> Client.do_post()
+    |> case do
+      {:ok, _} ->
+        :ok
+
+      err ->
+        Logger.warning("Error sending customer_feedback message: #{inspect(err)}")
+        err
+    end
+  end
+
+  def request_with_thank_you_note(%Order{status: "COMPLETED"} = order) do
+    %Order{user: %User{psid: psid}, product: %Product{sku: sku, title: product_title}} =
+      Repo.preload(order, [:user, :product])
+
+    %{
+      psid: psid,
+      title: "Thanks for buying #{product_title}!",
+      subtitle: "Let us know how you like #{product_title}.",
+      button_title: "Give us your review",
+      question_id: sku,
+      placeholder: "Your review"
+    }
+    |> mk_request_payload()
     |> Client.do_post()
     |> case do
       {:ok, _} ->
@@ -80,6 +84,58 @@ defmodule MessengerBot.Review do
     end
   end
 
+  defp mk_request_payload(%{
+         psid: psid,
+         title: title,
+         subtitle: subtitle,
+         button_title: button_title,
+         question_id: question_id,
+         placeholder: placeholder
+       }) do
+    if valid_param?(title, @title_max_len) and
+         valid_param?(subtitle, @subtitle_max_len) and
+         valid_param?(button_title, @button_title_max_len) and
+         valid_param?(question_id, @question_id_max_len) and
+         valid_param?(placeholder, @placeholder_max_len) do
+      %{
+        "recipient" => %{"id" => psid},
+        "message" => %{
+          "attachment" => %{
+            "type" => "template",
+            "payload" => %{
+              "template_type" => "customer_feedback",
+              "title" => title,
+              "subtitle" => subtitle,
+              "button_title" => button_title,
+              "feedback_screens" => [
+                %{
+                  "questions" => [
+                    %{
+                      "id" => question_id,
+                      "type" => "csat",
+                      "score_label" => "none",
+                      "score_option" => "five_stars",
+                      "follow_up" => %{
+                        "type" => "free_form",
+                        "placeholder" => placeholder
+                      }
+                    }
+                  ]
+                }
+              ],
+              "business_privacy" => %{
+                "url" => "https://www.example.com"
+              },
+              "expires_in_days" => 3
+            }
+          }
+        }
+      }
+    else
+      raise ArgumentError, message: "Incorrect parameters"
+    end
+  end
+
   defp store_review(%User{} = user, sku, %{
          "type" => "csat",
          "payload" => csat,
@@ -93,6 +149,17 @@ defmodule MessengerBot.Review do
     else
       nil ->
         Logger.warning("Received feedback for unknown sku=#{sku}")
+    end
+  end
+
+  defp valid_param?(param, max_len) do
+    String.length(param) <= max_len and !url?(param)
+  end
+
+  defp url?(term) do
+    case URI.parse(term) do
+      %URI{scheme: nil} -> false
+      _ -> true
     end
   end
 end

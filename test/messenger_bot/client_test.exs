@@ -1,5 +1,5 @@
 defmodule MessengerBot.ClientTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
   alias MessengerBot.Client
 

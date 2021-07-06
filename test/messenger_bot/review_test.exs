@@ -1,5 +1,5 @@
 defmodule MessengerBot.ReviewTest do
-  use MessengerBot.DataCase, async: true
+  use MessengerBot.DataCase
   alias MessengerBot.Models.{User, Product, Order}
   alias MessengerBot.{Review, Repo}
 
@@ -27,14 +27,14 @@ defmodule MessengerBot.ReviewTest do
     %{bypass: bypass, user: user, product: product, order: order}
   end
 
-  test "request review for completed order", %{order: order, bypass: bypass} do
+  test "request review for recently completed order", %{order: order, bypass: bypass} do
     Bypass.expect_once(bypass, "POST", "/#{@api_version}/me/messages", fn conn ->
       Plug.Conn.resp(conn, 200, Jason.encode!(@response))
     end)
 
     {:ok, order} = Order.mark_completed(%Order{order | status: "IN_PROGRESS"})
 
-    Review.request(order)
+    Review.request_for_recent_order(order)
   end
 
   test "process callback works", %{user: user, product: product} do
