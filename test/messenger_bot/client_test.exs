@@ -17,7 +17,7 @@ defmodule MessengerBot.ClientTest do
   @rate_limit_response %{
     "error" => %{
       "message" => "Calls to this API have exceeded the rate limit",
-      "code" => 619
+      "code" => 613
     }
   }
   @no_matching_user_response %{

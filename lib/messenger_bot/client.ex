@@ -23,7 +23,7 @@ defmodule MessengerBot.Client do
     body
     |> Jason.decode!()
     |> case do
-      %{"error" => %{"code" => 619}} -> {:error, :rate_limited}
+      %{"error" => %{"code" => 613}} -> {:error, :rate_limited}
       %{"error" => %{"message" => message}} -> {:error, message}
       body -> {:ok, body}
     end
