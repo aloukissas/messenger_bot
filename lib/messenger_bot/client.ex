@@ -1,5 +1,6 @@
 defmodule MessengerBot.Client do
   use Tesla, only: [:post]
+  require Logger
 
   plug Tesla.Middleware.JSON
   plug Tesla.Middleware.BaseUrl, Application.fetch_env!(:messenger_bot, :facebook_api)[:base_url]
@@ -23,9 +24,15 @@ defmodule MessengerBot.Client do
     body
     |> Jason.decode!()
     |> case do
-      %{"error" => %{"code" => 613}} -> {:error, :rate_limited}
-      %{"error" => %{"message" => message}} -> {:error, message}
-      body -> {:ok, body}
+      %{"error" => %{"code" => 613}} ->
+        Logger.warning("Rate-limited sending message")
+        {:error, :rate_limited}
+
+      %{"error" => %{"message" => message}} ->
+        {:error, message}
+
+      body ->
+        {:ok, body}
     end
   end
 

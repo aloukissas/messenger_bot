@@ -22,15 +22,7 @@ defmodule MessengerBot.Review do
       placeholder: "Write your review"
     }
     |> mk_request_payload()
-    |> Client.do_post()
-    |> case do
-      {:ok, _} ->
-        :ok
-
-      err ->
-        Logger.warning("Error sending customer_feedback message: #{inspect(err)}")
-        err
-    end
+    |> send_request()
   end
 
   def request_with_thank_you_note(%Order{status: "COMPLETED"} = order) do
@@ -46,15 +38,7 @@ defmodule MessengerBot.Review do
       placeholder: "Your review"
     }
     |> mk_request_payload()
-    |> Client.do_post()
-    |> case do
-      {:ok, _} ->
-        :ok
-
-      err ->
-        Logger.warning("Error sending customer_feedback message: #{inspect(err)}")
-        err
-    end
+    |> send_request()
   end
 
   def request(%Order{id: id}) do
@@ -133,6 +117,20 @@ defmodule MessengerBot.Review do
       }
     else
       raise ArgumentError, message: "Incorrect parameters"
+    end
+  end
+
+  defp send_request(payload) do
+    payload
+    |> Client.do_post()
+    |> case do
+      {:ok, _} ->
+        :ok
+
+      err ->
+        # TODO: perhaps put errored calls in a job queue (e.g. Oban) and selectively retry
+        Logger.warning("Error sending customer_feedback message: #{inspect(err)}")
+        err
     end
   end
 
