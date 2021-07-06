@@ -5,7 +5,7 @@
 # is restricted to this project.
 
 # General application configuration
-use Mix.Config
+import Config
 
 config :messenger_bot,
   ecto_repos: [MessengerBot.Repo]

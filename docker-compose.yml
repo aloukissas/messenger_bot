@@ -1,0 +1,28 @@
+services:
+  web:
+    depends_on:
+      - db
+    links:
+      - db
+    build:
+      context: "."
+    environment:
+      - DATABASE_URL=ecto://postgres:postgres@db:5432/messenger_bot
+      - SECRET_KEY_BASE="dRVnhaWb1GzgxOo+4PbfNBjSSRAXRNyyXdcHmv9MGOPGQSsGbGWZaM5g6Ri1t4jg"
+      - PORT=4000
+      - MIX_ENV=prod
+    ports:
+      - "4000:4000"
+  db:
+    image: "postgres:13.3"
+    volumes:
+      - "postgres:/var/lib/postgresql/data"
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=messenger_bot
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+volumes:
+  postgres: {}
